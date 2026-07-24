@@ -21,4 +21,4 @@ models/Beat-Transformer/checkpoint/fold_5_trf_param.pt
 models/Beat-Transformer/checkpoint/fold_6_trf_param.pt
 models/Beat-Transformer/checkpoint/fold_7_trf_param.pt
 !models/Beat-Transformer/checkpoint/fold_4_trf_param.pt
-scipy_patch.py
+/scipy_patch.py

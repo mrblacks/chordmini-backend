@@ -219,6 +219,37 @@ def recognize_chords_firebase():
                 log_error(f"Failed to clean up temporary file {temp_file_path}: {cleanup_error}")
 
 
+@chords_bp.route('/api/recognize-chords-url', methods=['POST'])
+@limiter.limit(config.get_rate_limit('heavy_processing'))
+def recognize_chords_url():
+    """YouTube URL로부터 직접 코드 인식"""
+    try:
+        data = request.get_json()
+        if not data or not data.get('youtube_url'):
+            return jsonify({"error": "youtube_url 필요"}), 400
+
+        youtube_url = data['youtube_url']
+        from services.youtube.downloader import download_youtube_audio
+
+        with temporary_file(suffix='.mp3') as temp_path:
+            download_youtube_audio(youtube_url, temp_path)
+
+            chord_service = current_app.extensions['services']['chord_recognition']
+            result = chord_service.recognize_chords(
+                file_path=temp_path,
+                detector='auto',
+                chord_dict=None,
+                force=False,
+                use_spleeter=False,
+            )
+
+        return jsonify(result)
+
+    except Exception as e:
+        log_error(f"recognize_chords_url error: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
 @chords_bp.route('/api/chord-model-info', methods=['GET'])
 @limiter.limit(config.get_rate_limit('light_processing'))
 def chord_model_info():

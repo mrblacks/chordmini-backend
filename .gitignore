@@ -8,7 +8,12 @@ __pycache__/
 .env
 *.log
 checkpoint.bin
-models/ChordMini/
+models/ChordMini/data/
+models/ChordMini/checkpoints/btc/
+models/ChordMini/checkpoints/2e1d_model_best.pth
+models/ChordMini/checkpoints/btc_model_best.pth
+models/ChordMini/checkpoints/btc_model_large_voca.pt
+models/ChordMini/__pycache__/
 models/Beat-Transformer/save/
 models/Beat-Transformer/data/
 models/Beat-Transformer/test_audio/

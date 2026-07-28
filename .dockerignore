@@ -52,9 +52,20 @@ output_with_clicks.wav
 beats_with_positions.txt
 downbeats_measures.txt
 
-# DEPLOYMENT UPDATE: Exclude BTC models (no longer used)
-models/ChordMini/
 checkpoint.bin
+
+# ChordMini: exclude large data/unused checkpoints, keep only BTC-SL essentials
+models/ChordMini/data/
+models/ChordMini/checkpoints/btc/
+models/ChordMini/checkpoints/2e1d_model_best.pth
+models/ChordMini/checkpoints/btc_model_best.pth
+models/ChordMini/checkpoints/btc_model_large_voca.pt
+models/ChordMini/__pycache__/
+# Explicitly keep BTC-SL essentials
+!models/ChordMini/btc_chord_recognition.py
+!models/ChordMini/config/
+!models/ChordMini/checkpoints/SL/
+!models/ChordMini/src/
 
 # Exclude large Beat-Transformer model files but keep the Python code and essential checkpoint
 # models/Beat-Transformer/checkpoint - KEEP: contains only fold_4_trf_param.pt (35MB)

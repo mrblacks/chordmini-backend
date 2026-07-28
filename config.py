@@ -37,6 +37,7 @@ class Config:
         "http://0.0.0.0:3000",  # Docker bind address
         "https://*.vercel.app",   # Vercel deployments
         "https://chord-mini-app.vercel.app",  # Specific Vercel deployment
+        "https://bandable.vercel.app",  # Bandable
     ]
 
     # Add custom CORS origins from environment

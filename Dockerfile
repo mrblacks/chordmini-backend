@@ -30,11 +30,10 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip "setuptools==79.0.1" wheel
 RUN pip install --no-cache-dir Cython>=0.29.0 numpy==1.26.4
 RUN pip install --no-cache-dir git+https://github.com/CPJKU/madmom
-# Install all requirements except Spleeter first, then install Spleeter without deps to avoid resolver conflicts with librosa/httpx
+# Install requirements (Spleeter excluded — TensorFlow too large for Render free tier 512MB)
 RUN grep -v '^spleeter==' requirements.txt | grep -v '^typer==' > requirements_nospleeter.txt \
     && pip install --no-cache-dir -r requirements_nospleeter.txt \
-    && pip install --no-cache-dir --no-deps typer==0.9.0 \
-    && pip install --no-cache-dir --no-deps spleeter==2.3.2
+    && pip install --no-cache-dir --no-deps typer==0.9.0
 
 # Clone Chord-CNN-LSTM model (Python code + weights) in builder stage
 RUN git clone --depth 1 https://github.com/ptnghia-j/chord-cnn-lstm-model.git /tmp/chord-cnn-lstm
@@ -79,29 +78,11 @@ COPY compat/ compat/
 # Ensure legacy scipy_patch.py is not present (use compat/ patches instead)
 RUN rm -f /app/scipy_patch.py || true
 
-# Create non-root user for security BEFORE downloading models
+# Create non-root user for security
 RUN useradd --create-home --shell /bin/bash --uid 1001 app \
     && chown -R app:app /app
 
-# Switch to app user to download Spleeter models with correct permissions
 USER app
-
-# Pre-download Spleeter models manually using curl (httpx redirect issue workaround)
-# Download the 5-stems model (~200MB) and extract to the correct cache location
-# Spleeter expects models in /home/app/.cache/spleeter/pretrained_models/5stems/ directory
-# The tar.gz contains: checkpoint, model.data-00000-of-00001, model.index, model.meta
-RUN mkdir -p /home/app/.cache/spleeter/pretrained_models/5stems && \
-    cd /home/app/.cache/spleeter/pretrained_models/5stems && \
-    echo "⬇️  Downloading Spleeter 5-stems model..." && \
-    curl -L -o 5stems.tar.gz https://github.com/deezer/spleeter/releases/download/v1.4.0/5stems.tar.gz && \
-    echo "📦 Extracting model files..." && \
-    tar -xzf 5stems.tar.gz && \
-    rm 5stems.tar.gz && \
-    echo "✅ Spleeter 5-stems model downloaded and extracted successfully" && \
-    echo "📁 Model files in /home/app/.cache/spleeter/pretrained_models/5stems/:" && \
-    ls -la /home/app/.cache/spleeter/pretrained_models/5stems/ && \
-    echo "🔍 Verifying checkpoint file exists:" && \
-    test -f /home/app/.cache/spleeter/pretrained_models/5stems/checkpoint && echo "✅ checkpoint file found" || echo "❌ checkpoint file NOT found"
 
 # Expose port
 EXPOSE 8080
@@ -117,4 +98,4 @@ ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 
 # Run the application with optimized settings for ML processing
-CMD gunicorn --bind 0.0.0.0:${PORT:-8080} --workers 2 --timeout 600 --worker-class sync --max-requests 1000 --max-requests-jitter 100 --preload app:app
+CMD gunicorn --bind 0.0.0.0:${PORT:-8080} --workers 1 --timeout 600 --worker-class sync --max-requests 100 app:app

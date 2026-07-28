@@ -63,7 +63,7 @@ class Config:
     # Feature toggles - defer to runtime availability checks
     USE_BEAT_TRANSFORMER = True
     USE_CHORD_CNN_LSTM = True
-    USE_SPLEETER = True
+    USE_SPLEETER = False  # Disabled: TensorFlow memory too large for Render free tier (512MB)
     USE_GENIUS = True
     # DEPLOYMENT UPDATE: Disable BTC models for this deployment
     USE_BTC_SL = False

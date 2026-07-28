@@ -36,6 +36,9 @@ RUN grep -v '^spleeter==' requirements.txt | grep -v '^typer==' > requirements_n
     && pip install --no-cache-dir --no-deps typer==0.9.0 \
     && pip install --no-cache-dir --no-deps spleeter==2.3.2
 
+# Clone Chord-CNN-LSTM model (Python code + weights) in builder stage
+RUN git clone --depth 1 https://github.com/ptnghia-j/chord-cnn-lstm-model.git /tmp/chord-cnn-lstm
+
 # Stage 2: Runtime
 FROM python:3.10-slim as runtime
 
@@ -66,6 +69,8 @@ COPY config/ config/
 COPY services/ services/
 COPY blueprints/ blueprints/
 COPY models/ models/
+# Copy Chord-CNN-LSTM model from builder (cloned from ptnghia-j/chord-cnn-lstm-model)
+COPY --from=builder /tmp/chord-cnn-lstm models/Chord-CNN-LSTM/
 COPY utils/ utils/
 COPY extensions.py .
 COPY error_handlers.py .
@@ -73,7 +78,6 @@ COPY error_handlers.py .
 COPY compat/ compat/
 # Ensure legacy scipy_patch.py is not present (use compat/ patches instead)
 RUN rm -f /app/scipy_patch.py || true
-# Note: BTC models and large Beat-Transformer files excluded via .dockerignore to reduce container size
 
 # Create non-root user for security BEFORE downloading models
 RUN useradd --create-home --shell /bin/bash --uid 1001 app \
